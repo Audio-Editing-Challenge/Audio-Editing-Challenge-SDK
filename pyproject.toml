@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aec-upload"
+version = "0.1.0"
+description = "Validation, packaging and streaming uploads for the Audio Editing Challenge"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{name = "Audio Editing Challenge contributors"}]
+keywords = ["audio", "evaluation", "challenge", "sdk"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Multimedia :: Sound/Audio",
+]
+dependencies = ["httpx>=0.27,<1"]
+
+[project.urls]
+Homepage = "https://audio-editing-challenge.github.io/"
+Repository = "https://github.com/Audio-Editing-Challenge/Audio-Editing-Challenge-SDK"
+Issues = "https://github.com/Audio-Editing-Challenge/Audio-Editing-Challenge-SDK/issues"
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9", "ruff>=0.7,<1"]
+
+# Keep the public import path while allowing this directory to be the repository root.
+[tool.setuptools]
+packages = ["aec_upload"]
+include-package-data = false
+
+[tool.setuptools.package-dir]
+aec_upload = "."
+
+[tool.setuptools.package-data]
+aec_upload = ["data/*.json", "py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["aec_upload"]

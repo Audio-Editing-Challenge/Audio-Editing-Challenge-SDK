@@ -1,0 +1,11 @@
+include README.md LICENSE py.typed
+include __init__.py client.py validation.py
+include .gitignore
+recursive-include data *.json
+recursive-include examples *.py
+recursive-include tests *.py
+recursive-include .github/workflows *.yml
+recursive-exclude * __pycache__ *.py[cod]
+prune .venv
+prune build
+prune dist
