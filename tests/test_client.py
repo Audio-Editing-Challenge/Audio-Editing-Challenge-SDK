@@ -95,3 +95,43 @@ def test_ready_upload_listing_and_network_errors_are_not_retried(policy):
         with pytest.raises(httpx.ReadTimeout):
             client.list_uploads()
     assert len(calls) == 2
+
+
+def test_sdk_hf_upload_only_sends_source_and_returns_existing_shape(policy):
+    calls = []
+
+    def handle(request):
+        import json
+        calls.append(request)
+        assert request.url.path == "/upload/uploads/from-hf"
+        assert request.headers["authorization"] == "Bearer test-key"
+        assert json.loads(request.content) == {
+            "competition_id": policy.competition_id, "name": "HF test",
+            "source_type": "public", "source": "hf://buckets/team/results/result.tar",
+        }
+        return httpx.Response(201, json={"upload": {"id": "ready-id"}, "quota": {"used": 1}})
+
+    with UploadClient("http://test", "test-key", policy.competition_id) as client:
+        client._client.close()
+        client._client = httpx.Client(transport=httpx.MockTransport(handle), base_url="http://test")
+        assert client.upload_from_hf(
+            "hf://buckets/team/results/result.tar", name="HF test",
+        )["upload"]["id"] == "ready-id"
+    assert len(calls) == 1
+
+
+def test_sdk_presigned_mode_forwards_url_in_body_only(policy):
+    import json
+
+    source = "https://user.s3.hf.co/bucket/test.tar?X-Amz-Signature=test-only"
+
+    def handle(request):
+        assert json.loads(request.content)["source_type"] == "presigned"
+        assert json.loads(request.content)["source"] == source
+        assert "X-Amz" not in str(request.url)
+        return httpx.Response(201, json={"upload": {"id": "private-ready"}})
+
+    with UploadClient("http://test", "test-key", policy.competition_id) as client:
+        client._client.close()
+        client._client = httpx.Client(transport=httpx.MockTransport(handle), base_url="http://test")
+        assert client.upload_from_hf(source, name="private", source_type="presigned")["upload"]["id"] == "private-ready"

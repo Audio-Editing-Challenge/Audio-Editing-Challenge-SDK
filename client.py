@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import httpx
 
@@ -76,6 +76,22 @@ class UploadClient:
                 },
                 content=iter(lambda: stream.read(64 * 1024), b""),
             )
+        return self._result(response)
+
+    def upload_from_hf(
+        self, source: str, *, name: str, source_type: Literal["public", "presigned"] = "public",
+    ) -> dict[str, Any]:
+        """Import a public or presigned HF Bucket tar; wait for Ready Upload.
+
+        No local download or automatic retry. Use pack() before uploading your
+        results to HF. After a network failure, check list_uploads() first.
+        """
+        response = self._client.post(
+            "/upload/uploads/from-hf",
+            headers={"Authorization": f"Bearer {self._secret_key}"},
+            json={"competition_id": self._competition_id, "name": name,
+                  "source_type": source_type, "source": source},
+        )
         return self._result(response)
 
     def list_uploads(self) -> dict[str, Any]:
